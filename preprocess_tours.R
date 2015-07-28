@@ -1,6 +1,7 @@
 library(data.table)
+library(plyr)
 
-setwd('~/OneDrive/repos/safari-task-model/')
+setwd('~/OneDrive/repos/safari-data/')
 
 # fread() does not play nicely with na.strings apparently
 tours <- data.table(read.csv('tours.csv', na.strings=c("NaN", "NA")))
@@ -64,3 +65,5 @@ tours[,animal1Prior:=animal1Count/(trialsThisSector+1)]
 tours[,animal2Prior:=animal2Count/(trialsThisSector+1)]
 
 tours[,animalLogOdds:=log(animal1Prior/animal2Prior)]
+
+write.csv(tours, "tours_preprocessed.csv", row.names=F)
