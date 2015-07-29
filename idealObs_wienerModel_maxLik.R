@@ -3,9 +3,9 @@ library(RWiener)
 library(minqa)
 library(doMC)
 
-registerDoMC(cores=3)
+registerDoMC(cores=7) # ncores... 7 for bigmem, fewer for laptop
 
-d <- fread('../safari-data/tours_preprocessed.csv')
+d <- fread('tours_preprocessed.csv')
 
 # drop timeouts
 d <- d[!is.na(response)]

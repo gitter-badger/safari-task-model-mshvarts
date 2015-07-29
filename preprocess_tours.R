@@ -1,10 +1,8 @@
 library(data.table)
 library(plyr)
 
-setwd('~/OneDrive/repos/safari-data/')
-
 # fread() does not play nicely with na.strings apparently
-tours <- data.table(read.csv('tours.csv', na.strings=c("NaN", "NA")))
+tours <- data.table(read.csv('../safari-data/tours.csv', na.strings=c("NaN", "NA")))
 
 # exclude subject 2 for weirdness as per email from Stephanie 7/28
 tours <- tours[subject!=2]
