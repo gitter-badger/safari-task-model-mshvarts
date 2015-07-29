@@ -21,7 +21,7 @@ getWienerLik <- function(params, rt, animalLogOdds, bound){
   beta <- exp(beta) / (1+exp(beta))
   delta <- params[4] * animalLogOdds # drift
   negLik <- -dwiener(rt, alpha, tau, beta, delta, resp=bound, give_log=T)
-  negLik[is.infinite(negLik)] <- 10000 # very bad
+  negLik[is.infinite(negLik)] <- 100000 # very bad
   return(sum(negLik))
 }
 getWienerLik(c(2, 0.3, 0.5, 1), d$rt, d$animalLogOdds, d$bound)
