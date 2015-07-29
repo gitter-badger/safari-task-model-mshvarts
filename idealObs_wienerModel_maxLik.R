@@ -26,11 +26,11 @@ getWienerLik <- function(params, rt, animalLogOdds, bound){
 getWienerLik(c(2, 0.3, 0.5, 1), d$rt, d$animalLogOdds, d$bound)
 
 fitSubject <- function(d,lower = c(0.001, 0.01, -10, -10), upper = c(10, 5, 10, 10), nrestarts = 10){
-  cat("Fitting subject %s...", unique(d$subject))
+  print(sprintf("Fitting subject %s...", unique(d$subject)))
   res <- bobyqa(runif(4, min=lower,max=upper), getWienerLik, lower=lower, upper=upper,control=list(), d$rt, d$animalLogOdds, d$bound)
   bestsofar <- c(res$fval, res$par, res$ierr)
   for (i in 1:nrestarts){
-    cat("Restart %s/%s...", i, nrestarts)
+    print(sprintf("Restart %s/%s...", i, nrestarts))
     res <- bobyqa(runif(4, min=lower,max=upper), getWienerLik, lower=lower, upper=upper,control=list(), d$rt, d$animalLogOdds, d$bound)
     if (res$fval < bestsofar[1]) bestsofar <- c(res$fval, res$par, res$ierr)
   }
@@ -38,5 +38,5 @@ fitSubject <- function(d,lower = c(0.001, 0.01, -10, -10), upper = c(10, 5, 10, 
 }
 
 allFits <- ddply(d, .(subject), fitSubject, .parallel=T)
-cat("Saving...")
+print("Saving...")
 write.csv(allFits, "idealObs_wienerModel_maxLikFits.csv")

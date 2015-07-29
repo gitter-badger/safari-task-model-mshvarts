@@ -1,7 +1,7 @@
 library(data.table)
 library(plyr)
 
-cat("Loading data...")
+print("Loading data...")
 # fread() does not play nicely with na.strings apparently
 tours <- data.table(read.csv('../safari-data/tours.csv', na.strings=c("NaN", "NA")))
 
@@ -35,7 +35,7 @@ getCounts <- function(d){
 }
 
 # get the posteriors (assuming dirichlet prior/post) for each timepoint
-cat("Computing counts by trial by subject by sector... ")
+print("Computing counts by trial by subject by sector... ")
 counts <- daply(tours, .(subject), getCounts, .progress="text")
 counts <- adply(counts, 1:3, .progress="text") # get this back into a table (one row per sector per subject per trial)
 
@@ -49,7 +49,7 @@ counts$sector <- as.numeric(levels(counts$sector))[counts$sector]
 counts <- melt(counts, id.vars=c("subject","trial","sector"), variable.name="animal", value.name="countSoFar")
 
 # at a first stab, let's assume there's nothing interesting going on a sector other than the one we're in now. so let's just look up the counts into the data
-cat("Merging animal running counts into dataset... ")
+print("Merging animal running counts into dataset... ")
 
 tours <- merge.data.frame(tours, counts, by.x=c("subject", "trial", "sector","question_1"), by.y=c("subject","trial","sector","animal"), sort=F)
 colnames(tours)[15] <- "animal1Count"
@@ -66,5 +66,5 @@ tours[,animal1Prior:=animal1Count/(trialsThisSector+1)]
 tours[,animal2Prior:=animal2Count/(trialsThisSector+1)]
 
 tours[,animalLogOdds:=log(animal1Prior/animal2Prior)]
-cat("Writing tours_preprocessed.csv")
+print("Writing tours_preprocessed.csv")
 write.csv(tours, "tours_preprocessed.csv", row.names=F)
