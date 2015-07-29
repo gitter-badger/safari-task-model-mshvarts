@@ -40,4 +40,4 @@ fitSubject <- function(d,lower = c(0.001, 0.01, -10, -10), upper = c(10, 5, 10, 
 
 allFits <- ddply(d, .(subject), fitSubject, .parallel=T)
 print("Saving...")
-write.csv(allFits, "idealObs_wienerModel_maxLikFits.csv")
+write.csv(allFits, "idealObs_wienerModel_maxLikFits.csv", rownames=F)
