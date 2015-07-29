@@ -2,6 +2,7 @@ library(data.table)
 library(RWiener)
 library(minqa)
 library(doMC)
+library(plyr)
 
 registerDoMC(cores=7) # ncores... 7 for bigmem, fewer for laptop
 
