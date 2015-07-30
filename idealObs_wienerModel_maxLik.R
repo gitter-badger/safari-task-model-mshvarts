@@ -17,14 +17,16 @@ getWienerLik <- function(params, rt, animalLogOdds, bound){
   alpha <- params[1] # boundary separation
   tau <- params[2] # nondecision time
   beta <- params[3] * animalLogOdds # bias
-  # beta is sort of funky: it actually corresponds to a value of ± alpha, but dwiener expects it to be in the range of 0..1 and scales it against alpha internally. Slightly hackish inverse logit here (since we have more than two options so it's not real log odds)
+  # beta is sort of funky: it actually corresponds to a value of ± alpha, 
+  # but dwiener expects it to be in the range of 0..1 and scales it 
+  # against alpha internally. Slightly hackish inverse logit here (since 
+  # we have more than two options so it's not real log odds)
   beta <- exp(beta) / (1+exp(beta))
   delta <- params[4] * animalLogOdds # drift
   negLik <- -dwiener(rt, alpha, tau, beta, delta, resp=bound, give_log=T)
   negLik[is.infinite(negLik)] <- 100000 # very bad
   return(sum(negLik))
 }
-getWienerLik(c(2, 0.3, 0.5, 1), d$rt, d$animalLogOdds, d$bound)
 
 fitSubject <- function(d,lower = c(0.001, 0.01, -10, -10), upper = c(10, 5, 10, 10), nrestarts = 10){
   print(sprintf("Fitting subject %s...", unique(d$subject)))
@@ -39,5 +41,6 @@ fitSubject <- function(d,lower = c(0.001, 0.01, -10, -10), upper = c(10, 5, 10, 
 }
 
 allFits <- ddply(d, .(subject), fitSubject, .parallel=T)
+colnames(allFits) <- c("subject","negLL","alpha","tau","betaMult","deltaMult","convergStatus")
 print("Saving...")
 write.csv(allFits, "idealObs_wienerModel_maxLikFits.csv", row.names=F)
