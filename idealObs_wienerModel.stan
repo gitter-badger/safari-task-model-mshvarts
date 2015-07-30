@@ -23,7 +23,6 @@ functions {
      	real delta; 
      	rt_pos <- fabs(rt); // get rid of the weird negative RT convention now
      	alpha <- 2 * z; 
-     	tau <- t0;
      	// if rt < t0, return something really small (otherwise degeneracy ensues)
      	if (rt_pos < t0){
      		return log(1e-10);
@@ -52,8 +51,8 @@ functions {
      	# print(z);
      	# print(x0);
      	# print("alpha=",alpha, "tau=",tau,"beta=",beta,"delta=",delta,"rt_pos=",rt_pos);
-     	# print("dwiener(",rt_pos,",",alpha,",",tau,",",beta,",",delta,")");
-     	return(wiener_log(rt_pos, alpha, tau, beta, delta)); 
+     	# print("dwiener(",rt_pos,",",alpha,",",t0,",",beta,",",delta,")");
+     	return(wiener_log(rt_pos, alpha, t0, beta, delta)); 
      }
 
    }
@@ -119,7 +118,8 @@ functions {
    	for ( i in 1:N ) {
    		# get the log count ratio (means no need to normalize!)
    		logCountRatio <- log(counts[subjects[i]][sectors[i]][animal1Choice[i]]/counts[subjects[i]][sectors[i]][animal2Choice[i]]); 
-   		a <- subj_a_mult[subjects[i]]*logCountRatio; 
+   		# a <- subj_a_mult[subjects[i]]*logCountRatio; 
+   		a <- logCountRatio; 
    		# x0 <-x0_mult[subjects[i]]*counts[subjects[i]][sectors[i]][animals[i]]; 
    		rt_conditional[i] ~ wfpt_bogacz(subj_t0[subjects[i]], a, subj_z[subjects[i]], subj_x0[subjects[i]]); 
    		counts[subjects[i]][sectors[i]][animalShown[i]] <- counts[subjects[i]][sectors[i]][animalShown[i]] + 1; 
