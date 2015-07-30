@@ -29,30 +29,30 @@ functions {
      	}
      	// transform params, flip based on conditional rt
      	if (rt>0) { 
-     		beta <- (x0 + z) / (2 * z);
+     		beta <- x0;
      		delta <- a; 
      	} 
      	else {
-     		beta <- 1 - (x0 + z) / (2 * z);
+     		beta <- 1 - x0;
      		delta <- -a; 
      	}
-			// if startpoint is above/below threshold, set very close to threshold
-			// (if this is too close, the mass is a delta function on t0, I think .999 is reasonable)
-     	if (beta >= 1){
-     		beta <- 0.999;
-     	} 
-     	if (beta <= 0){
-     		beta <- 0.0001; 
-     	}
+       // if startpoint is above/below threshold, set very close to threshold
+       // (if this is too close, the mass is a delta function on t0, I think .999 is reasonable)
+       if (beta >= 1){
+         beta <- 0.999;
+       } 
+       if (beta <= 0){
+         beta <- 0.0001; 
+       }
 
-     	# print(rt);
-     	# print(t0);
-     	# print(a);
-     	# print(z);
-     	# print(x0);
-     	# print("alpha=",alpha, "tau=",tau,"beta=",beta,"delta=",delta,"rt_pos=",rt_pos);
-     	# print("dwiener(",rt_pos,",",alpha,",",t0,",",beta,",",delta,")");
-     	return(wiener_log(rt_pos, alpha, t0, beta, delta)); 
+       # print(rt);
+       # print(t0);
+       # print(a);
+       # print(z);
+       # print(x0);
+       # print("alpha=",alpha, "tau=",tau,"beta=",beta,"delta=",delta,"rt_pos=",rt_pos);
+       # print("dwiener(",rt_pos,",",alpha,",",t0,",",beta,",",delta,")");
+       return(wiener_log(rt_pos, alpha, t0, beta, delta)); 
      }
 
    }
@@ -72,57 +72,74 @@ functions {
 
    }
    transformed data{
-   	real rt_conditional[N]; 
-   	for ( i in 1:N){
-   		if(animalChoiceMade[i] == 1){
-   			rt_conditional[i] <- rt[i];
-   		} 
-   		else {
-   			rt_conditional[i] <- -rt[i];
-   		}
-   	}
-   }
+    int N_SUBJ_PARAMS;
+    real rt_conditional[N]; 
 
-   parameters{
-   	real<lower=0> subj_a_mult[N_SUBJ]; // multiplier on the log probability ratio to get drift
-   	# real<lower=0> subj_a_baseline[N_SUBJ]; 
-   	// real x0_mult[N_SUBJ]; // multiplier on the log probability ratio to get startpoint
-   	real<lower=0> subj_x0[N_SUBJ]; // NDT is positive
-   	real<lower=0> subj_z[N_SUBJ]; // thresholds are positive (symmetric)
-   	real<lower=0> subj_t0[N_SUBJ]; // t0s are positive
-   }
+    N_SUBJ_PARAMS <- 3; 
+    for ( i in 1:N){
+     if(animalChoiceMade[i] == 1){
+      rt_conditional[i] <- rt[i];
+    } 
+    else {
+      rt_conditional[i] <- -rt[i];
+    }
+  }
+}
 
-   model{
-   	// declarations
-   	real a; // compute drift from log count ratio and multiplier
-   	real logCountRatio; 
-   	
-   	// for each subject we have their counts (in non ideal obs this should be a parameter)
-   	vector[N_ANIMALS] counts[N_SUBJ, N_SECTORS]; 
-   	// initialize the counts
-   	for (i in 1:N_SUBJ){
-   		for (j in 1:N_SECTORS){
-   			for (k in 1:N_ANIMALS){
-   				counts[i][j][k] <- 1;  // later this can be the prior concentration
-   			}
-   		}
-   	}    	
-   	// weak priors
-   	subj_a_mult ~ normal(0, 10); 
-   	subj_x0 ~ normal(0, 10); 
-   	subj_z ~ normal(0, 10); 
+parameters{
+  vector[N_SUBJ_PARAMS] subjGrandMeans; 
+  vector<lower=0> [N_SUBJ_PARAMS] subject_coefs[N_SUBJ]; // subject coefs in a vector so we can define covariance mat
+  cholesky_factor_corr[N_SUBJ_PARAMS] L_Omega_subj; // cholesky factorization of subject effects correlation matrix
+  vector<lower=0>[N_SUBJ_PARAMS] tau_subj; // scale vector for subject effects correlation matrix
 
-   	// pretty stong prior on ndt
-   	subj_t0 ~ normal(0.3, 1); 
+}
 
-   	for ( i in 1:N ) {
-   		# get the log count ratio (means no need to normalize!)
-   		logCountRatio <- log(counts[subjects[i]][sectors[i]][animal1Choice[i]]/counts[subjects[i]][sectors[i]][animal2Choice[i]]); 
-   		# a <- subj_a_mult[subjects[i]]*logCountRatio; 
-   		a <- logCountRatio; 
-   		# x0 <-x0_mult[subjects[i]]*counts[subjects[i]][sectors[i]][animals[i]]; 
-   		rt_conditional[i] ~ wfpt_bogacz(subj_t0[subjects[i]], a, subj_z[subjects[i]], subj_x0[subjects[i]]); 
-   		counts[subjects[i]][sectors[i]][animalShown[i]] <- counts[subjects[i]][sectors[i]][animalShown[i]] + 1; 
-   	}
+transformed parameters{ 
+  real subject_x0[N_SUBJ];
+  real<lower=0> subject_z[N_SUBJ]; 
+  real<lower=0> subject_t0[N_SUBJ];
+  real x0_grandMean; 
+  real z_grandMean; 
+  real t0_grandMean; 
 
-   }
+  for (i in 1:N_SUBJ){
+    subject_x0[i] <- subject_coefs[i][1];
+    subject_z[i] <- subject_coefs[i][2];
+    subject_t0[i] <- subject_coefs[i][3];
+  }
+
+  x0_grandMean <- subjGrandMeans[1]; 
+  z_grandMean <- subjGrandMeans[2]; 
+  t0_grandMean <- subjGrandMeans[3]; 
+
+}
+model{
+  // declarations 
+  matrix[N_SUBJ_PARAMS,N_SUBJ_PARAMS] Sigma_subj; // covariance matrix for subject effects, computed from corr matrix and scale
+  real logCountRatio; 
+
+  // for each subject we have their counts (in non ideal obs this should be a parameter)
+  vector[N_ANIMALS] counts[N_SUBJ, N_SECTORS]; 
+
+  // initialize the counts
+  for (i in 1:N_SUBJ){
+    for (j in 1:N_SECTORS){
+      for (k in 1:N_ANIMALS){
+        counts[i][j][k] <- 1;  // later this can be the prior concentration
+      }
+    }
+  }  
+  // subject ranefs
+  L_Omega_subj ~ lkj_corr_cholesky(2); // prior on the cholesky factorization of the correlation matrix of the subject ranefs
+  tau_subj ~ cauchy(0, 2.5); // prior on scale on the correlation matrix of the subject ranefs
+  Sigma_subj <- diag_pre_multiply(tau_subj, L_Omega_subj); // diag(tau) * Omega, as per manual p59
+  subject_coefs ~ multi_normal_cholesky(subjGrandMeans, Sigma_subj); 
+
+  for ( i in 1:N ) {
+   # get the log count ratio (means no need to normalize!)
+   logCountRatio <- log(counts[subjects[i]][sectors[i]][animal1Choice[i]]/counts[subjects[i]][sectors[i]][animal2Choice[i]]); 
+   rt_conditional[i] ~ wfpt_bogacz(subject_t0[subjects[i]], logCountRatio, subject_z[subjects[i]], subject_x0[subjects[i]]); 
+   counts[subjects[i]][sectors[i]][animalShown[i]] <- counts[subjects[i]][sectors[i]][animalShown[i]] + 1; 
+ }
+
+}
