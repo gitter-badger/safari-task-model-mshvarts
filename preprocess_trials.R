@@ -1,4 +1,3 @@
-library(rstan)
 library(data.table)
 library(plyr)
 
