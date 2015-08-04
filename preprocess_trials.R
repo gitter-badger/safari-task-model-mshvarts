@@ -7,6 +7,7 @@ d <- fread('../safari-data/tours.csv')
 d.trials <- fread('../safari-data/trials.csv')
 # for each test we want the combined evidence (counts) and the response, for each sequence. but sequences are not marked :/
 
+d.trials <- d.trials[subject!=2]
 d.trials[,prevTrial:=shift(trial, 1L, type="lag")] 
 d.trials[,prevSubject:=shift(subject, 1L, type="lag")] 
 d.trials[,isNewSector:=prevTrial>=trial]
