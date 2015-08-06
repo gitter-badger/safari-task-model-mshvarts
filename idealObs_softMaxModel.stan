@@ -27,7 +27,6 @@ data{
 
 
 parameters{
-  real softmaxAdjustHyperPrior; 
   real softmaxAdjust[N_SUBJ]; 
   real<lower=0> posteriorNoise[N_SUBJ]; 
   simplex[N_ANIMALS] subject_tours_posteriors[TOURS_N, N_SUBJ, N_SECTORS]; 
