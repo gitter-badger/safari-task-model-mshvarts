@@ -46,6 +46,7 @@ standata <- list(
 standata$tours_subjects <- as.integer(as.factor(standata$tours_subjects))
 standata$trials_subjects <- as.integer(as.factor(standata$trials_subjects))
 
-stanmodel <- stan(file="idealObs_softMaxModel.stan", data=standata, chains=1, iter=1)
+stanmodel_softmax <- stan(file="idealObs_softMaxModel.stan", data=standata, chains=1, iter=1)
+stanmodel_wiener <- stan(file="idealObs_wienerModel.stan", data=standata, chains=1, iter=1)
 
-fit_idealObs_softmax <- stan(fit=stanmodel, data=standata, chains=2, iter=300, warmup=100, cores=2, open_progress=T)
+fit_idealObs_softmax <- stan(fit=stanmodel, data=standata, chains=7, iter=500, warmup=100, cores=7, open_progress=T)
