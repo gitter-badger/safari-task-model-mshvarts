@@ -69,7 +69,7 @@ generated quantities {
   real trialChoiceDiff; 
   int predicted_choices[TRIALS_N];
   real subject_trials_posteriors[N_SUBJ, N_SECTORS];
-  simplex[N_ANIMALS] final_training_posterior[N_SECTORS, N_SECTORS]; 
+  simplex[N_ANIMALS] final_training_posterior[N_SUBJ, N_SECTORS]; 
   real count_sums[N_SUBJ, N_SECTORS]; 
   // normalize the noisified counts to get the final simplex for each subject/sector
   // initialize norms
