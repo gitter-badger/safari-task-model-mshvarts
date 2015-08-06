@@ -11,6 +11,12 @@ tours[,response01:=ifelse(response==1, 1, 0)]
 
 trials <- fread('./trials_preprocessed.csv')
 
+# do a subset of subjects
+sampled_subjs <- sample(tours$subject, 5)
+# sampled_subjs <- unique(tours$subject)
+tours <- tours[subject %in% sampled_subjs]
+trials <- trials[subject %in% sampled_subjs]
+
 trialsAnimalDistr <- as.matrix(trials[,23:27,with=F])
 
 standata <- list(
@@ -36,6 +42,10 @@ standata <- list(
       trials_sector1choice = trials$questions_sector_1,
       trials_sector2choice = trials$questions_sector_2)
 
+# transform subjects back into non-gapped space or we kill stan indexing if we subsampled
+standata$tours_subjects <- as.integer(as.factor(standata$tours_subjects))
+standata$trials_subjects <- as.integer(as.factor(standata$trials_subjects))
+
 stanmodel <- stan(file="idealObs_softMaxModel.stan", data=standata, chains=1, iter=1)
 
-fit_idealObs_softmax <- stan(fit=stanmodel, data=standata, chains=3, iter=300, warmup=100, cores=3)
+fit_idealObs_softmax <- stan(fit=stanmodel, data=standata, chains=2, iter=300, warmup=100, cores=2, open_progress=T)
